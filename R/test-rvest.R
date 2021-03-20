@@ -1,6 +1,9 @@
 library(rvest)
 
-# Read Alaska Thunderfuck html
+
+# Test on Alaska Thunderfuck ----------------------------------------------
+
+# Read html
 alaska <- read_html("https://rupaulsdragrace.fandom.com/wiki/Alaska")
 
 # Extract bio facts
@@ -29,4 +32,8 @@ html_text(facts) %>%
   pivot_wider(names_from = var)
 
 # Extract friends list
-friends <- value[14] %>% html_nodes("a") %>% html_text()
+friends <- facts[14] %>% html_nodes("a") %>% html_text()
+
+
+
+
