@@ -40,7 +40,10 @@ for (i in seasons) {
 all_queens <- all_queens %>%
   mutate(
     clean_name = str_replace(contestant, ' "(.*?)"', ""),
-    clean_name = str_replace(clean_name, ' (Group [[:digit:]])', "")) %>% # Removes nicknames in quotes, like Victoria "Porkchop" Parker
+    clean_name = str_replace(clean_name, ' \\(Group [[:digit:]]\\)', "")) %>% # Removes nicknames in quotes, like Victoria "Porkchop" Parker
   mutate(
     url_end = str_replace_all(clean_name, " ", "_"),
     url_end = str_replace_all(url_end, "'", "%27"))
+
+
+# TODO get rid of (Group 2)
