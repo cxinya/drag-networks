@@ -6,7 +6,7 @@ library(gtools)
 seasons <- seq(1, 13, 1)
 
 # Create empty tibble
-all_queens <- tibble(season = numeric(), Rank = character(), Contestant = character())
+all_queens <- tibble()
 
 # Add queens from each season
 for (i in seasons) {
@@ -24,24 +24,23 @@ for (i in seasons) {
   # Read table of queens per season
   season_queens <- season %>% html_element(".wikitable") %>%
     html_table() %>%
-    # filter(row_number() > 1) %>%
-    # select(queen = Contestant, rank = Rank) %>%
     mutate(
       season = i,
-      col_subtitle = ifelse(row_number() == 1, 1, NA)) %>%
+      col_subtitle = ifelse(row_number() == 1, 1, NA)) %>%    # th spans 2 rows, flag second row that contains ep info (e.g., Ball Challenge)
     select(col_subtitle, season, Contestant, everything()) %>%
-    # rename_all(funs(str_replace(., 'Ep.\\b', 'Ep. '))) %>%
     janitor::clean_names()
 
   # Add season to all_queens
-  # all_queens <- all_queens %>% rbind(season_queens)
   all_queens <- all_queens %>% bind_rows(season_queens)
 
 }
 
 
-# # TODO clean names, fix spaces, replace hyphens
-#
-# # Clean names
-# clean_name = str_replace(Contestant, ' "(.*?)"', ""), # Removes nicknames in quotes, like Victoria "Porkchop" Parker
-# url_end = str_replace_all(clean_name, " ", "_"),
+# Clean names
+all_queens <- all_queens %>%
+  mutate(
+    clean_name = str_replace(contestant, ' "(.*?)"', ""),
+    clean_name = str_replace(clean_name, ' (Group [[:digit:]])', "")) %>% # Removes nicknames in quotes, like Victoria "Porkchop" Parker
+  mutate(
+    url_end = str_replace_all(clean_name, " ", "_"),
+    url_end = str_replace_all(url_end, "'", "%27"))
