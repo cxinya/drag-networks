@@ -2,11 +2,15 @@ library(rvest)
 library(tidyverse)
 library(gtools)
 
-# All regular seasons
-seasons <- seq(1, 13, 1)
+
+# rvest data --------------------------------------------------------------
+
 
 # Create empty tibble
 all_queens <- tibble()
+
+# All regular seasons
+seasons <- seq(1, 13, 1)
 
 # Add queens from each season
 for (i in seasons) {
@@ -26,8 +30,7 @@ for (i in seasons) {
     html_table() %>%
     mutate(
       season = i,
-      col_subtitle = ifelse(row_number() == 1, 1, NA)) %>%    # th spans 2 rows, flag second row that contains ep info (e.g., Ball Challenge)
-    select(col_subtitle, season, Contestant, everything()) %>%
+      ep_info = ifelse(row_number() == 1, 1, NA)) %>%    # th spans 2 rows, flag second row that contains ep info (e.g., Ball Challenge)
     janitor::clean_names()
 
   # Add season to all_queens
@@ -36,15 +39,28 @@ for (i in seasons) {
 }
 
 
-# Clean names
-test <- all_queens %>%
+# Clean names and create url endings --------------------------------------
+
+all_queens <- all_queens %>%
   mutate(
     real_name = ifelse(is.na(real_name), name, real_name),
     hometown = ifelse(is.na(hometown), current_city, hometown),
-    contestant = str_replace(contestant, ' \\(Group [[:digit:]]\\)', ""),
+    contestant = str_replace(contestant, ' \\(Group [[:digit:]]\\)', ""), # Get rid of (Group #) in premieres where split into groups
     url_end = str_replace(contestant, ' "(.*?)"', ""), # Removes nicknames in quotes, like Victoria "Porkchop" Parker
     url_end = str_replace_all(url_end, " ", "_"),
     url_end = str_replace_all(url_end, "'", "%27"))
 
 
-# TODO get rid of (Group 2)
+
+# Assign ids to unique queens ---------------------------------------------
+
+ids <- all_queens %>%
+  filter(is.na(ep_info)) %>%
+  distinct(contestant) %>%
+  rowid_to_column(var = "queen_id")
+
+all_queens <- all_queens %>%
+  left_join(ids) %>%
+  select(ep_info, queen_id, season, Contestant, everything()) %>%
+  select(-name, -current_city, -photo)
+
