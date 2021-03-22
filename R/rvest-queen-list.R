@@ -61,6 +61,25 @@ ids <- all_queens %>%
 
 all_queens <- all_queens %>%
   left_join(ids) %>%
-  select(ep_info, queen_id, season, Contestant, everything()) %>%
+  select(ep_info, queen_id, season, contestant, everything()) %>%
   select(-name, -current_city, -photo)
 
+
+# Separate out episode info -----------------------------------------------
+
+ep_info <- all_queens %>%
+  filter(ep_info == 1)
+
+ep_info <- ep_info %>%
+  select(-contestant, -rank, -queen_id, -real_name, -age, -hometown, -url_end, -ep_info) %>%
+  rowwise() %>%
+  mutate(
+    num_eps = 16 - rowSums(is.na(across(matches("ep_[[:digit:]]"))), na.rm = T))
+
+
+# Save data ---------------------------------------------------------------
+
+all_queens <- all_queens %>% filter(is.na(ep_info))
+all_queens %>% write_csv("data/all_queens_eps.csv")
+
+ep_info %>% write_csv("data/episode_info.csv")
